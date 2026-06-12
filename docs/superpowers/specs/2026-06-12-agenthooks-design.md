@@ -795,8 +795,225 @@ async def full_audit(ctx: HookContext) -> HookContext:
 
 **Out of v1 (v2):**
 - `SqliteStore` persistent registry
-- CLI (`agenthooks register`, `list`, `test`, `logs`)
+- CLI (`agenthooks register`, `list`, `test`, `logs`, `suggest`)
 - Streaming response delta patching
 - HTTP hook invocation (remote hooks via URL)
 - Credential vault for hook auth
 - Hook URL allowlist enforcement (v2 — requires remote invocation)
+- Hook Marketplace (`agenthooks publish`, `agenthooks install @org/hook`)
+- Live hot-reload from remote config source
+
+---
+
+## Innovative Features
+
+These differentiate `agenthooks` from anything that exists today.
+
+### 1. Hook Composition — pipe operator
+
+Chain hooks into pipelines using `|` — like Unix pipes or Elixir's `|>`.
+Each hook in the chain receives the previous hook's output context.
+
+```python
+from agenthooks import pipe
+
+# Compose a pipeline from individual hooks
+acme_pipeline = (
+    inject_tenant_context      # step 1 — enrich with plant/cost_center
+    | sanitise_input           # step 2 — scrub PII
+    | rate_limit               # step 3 — enforce quota
+    | gdpr_redact              # step 4 — redact sensitive fields
+)
+
+# Register the whole pipeline as one impl
+@registry.implement("before_call")
+async def acme_before_call(ctx: HookContext) -> HookContext:
+    return await pipe(ctx, acme_pipeline)
+
+# Or register directly
+registry.implement("before_call")(acme_pipeline)
+```
+
+Why this matters: developers compose small single-purpose hooks instead of writing
+one large monolithic function. Each step is independently testable.
+
+---
+
+### 2. Built-in Pattern Decorators
+
+The top 7 enterprise patterns as zero-boilerplate decorators.
+No hook code needed — just annotate.
+
+```python
+from agenthooks.patterns import approval_gate, rate_limit, audit, inject, block_if, redact, localise
+
+@approval_gate(
+    tool="set_orders_to_teco",
+    system="acme_erp",           # calls acme_erp.is_approved(order_id)
+    timeout_s=300,
+)
+@rate_limit(
+    per="tenant",
+    limit=100,
+    window_s=60,
+    on_exceeded="block",         # or "degrade"
+)
+@audit(
+    destination="s3://acme-logs/agent-audit/",
+    on_events=["before_call", "on_tool_start", "on_session_end"],
+)
+@inject(
+    plant=lambda ctx: erp.get_plant(ctx.tenant_id),
+    fiscal_year="2026",
+)
+@redact("email", "phone", "password")
+@block_if(lambda ctx: ctx.metadata.get("plant") not in ALLOWED_PLANTS)
+@localise(source=lambda ctx: ctx.metadata.get("locale", "en"))
+class AcmeHookBundle:
+    """Declare all ACME hooks in one place — zero boilerplate."""
+    pass
+
+registry.register_bundle(AcmeHookBundle, filter={"tenant": "ACME_CORP"})
+```
+
+Each decorator is independently usable — `@audit(...)` alone is valid.
+All decorators compose — order matches decorator stack (bottom up).
+
+---
+
+### 3. Hook Testing Sandbox
+
+Test hooks in isolation against a simulated agent — no deployment needed.
+The single biggest pain point for hook developers today.
+
+```python
+from agenthooks.testing import HookSandbox, assert_context, assert_blocked
+
+async def test_teco_approval_blocks_unapproved():
+    async with HookSandbox() as sandbox:
+        result = await sandbox.run(
+            impl=acme_approval_check,
+            hookpoint="before_teco",
+            context=TecoContext(
+                order_id="4002130",
+                tenant_id="ACME_CORP",
+                session_id="test-session",
+            ),
+            mocks={
+                "acme_erp.is_approved": lambda order_id: False,
+            }
+        )
+
+        assert result.status == "blocked"
+        assert "manager approval" in result.block_reason
+        assert result.duration_ms < 300
+
+async def test_teco_approval_enriches_context():
+    async with HookSandbox() as sandbox:
+        result = await sandbox.run(
+            impl=acme_approval_check,
+            hookpoint="before_teco",
+            context=TecoContext(order_id="4002130", tenant_id="ACME_CORP"),
+            mocks={"acme_erp.is_approved": lambda _: True,
+                   "acme_erp.get_approver": lambda _: "manager_1"},
+        )
+
+        assert result.status == "ok"
+        assert result.ctx.approved_by == "manager_1"
+
+# Replay a recorded session against new hooks
+await sandbox.replay(
+    session_file="recorded_sessions/session_2026-06-12.jsonl",
+    impl=new_hook_version,
+    compare_with=old_hook_version,   # diff the outputs
+)
+```
+
+The sandbox also supports **replay** — record a real session, replay it against
+a new hook version to verify no regressions.
+
+---
+
+### 4. AI-Powered Hook Suggestions
+
+Point `agenthooks suggest` at your agent code — it analyses tool calls, write
+operations, and data flows, then suggests which hooks you should add.
+
+```bash
+$ agenthooks suggest --agent app/agent.py
+
+Analysing agent.py...
+
+🔍 Write operation detected: set_orders_to_teco
+   → Suggest: @approval_gate(tool="set_orders_to_teco")
+   → Reason: write operations on business-critical objects should have an approval gate
+
+🔍 PII detected in tool result: get_user_profile (fields: email, phone, name)
+   → Suggest: @redact("email", "phone", "name") on on_tool_end
+   → Reason: PII fields should be redacted before entering LLM context
+
+🔍 No rate limiting detected
+   → Suggest: @rate_limit(per="tenant", limit=100, window_s=60)
+   → Reason: multi-tenant agents without rate limits are vulnerable to abuse
+
+🔍 No audit logging detected
+   → Suggest: @audit(on_events=["on_tool_start", "on_session_end"])
+   → Reason: compliance and debugging require an audit trail
+
+Generate suggested hooks? [y/N]: y
+→ Written to hooks/suggested_hooks.py
+```
+
+Runs locally — no agent code leaves your machine. Uses static analysis
+(AST parsing of tool definitions + docstrings), not LLM inference.
+
+---
+
+### 5. agentlens + agenthooks Unified Observability
+
+`agentlens` profiles tool schema usage and token costs.
+`agenthooks` profiles hook execution and data flow.
+Together: complete agent observability.
+
+```python
+from agentlens import AgentLens
+from agenthooks import HookManager
+
+# Both attach to the same agent — unified trace
+lens = AgentLens()
+hooks = HookManager()
+
+agent = (
+    MyAgent()
+    .with_lens(lens)      # agentlens: tool profiling, token costs
+    .with_hooks(hooks)    # agenthooks: hook execution, data flow
+)
+
+# Unified dashboard shows:
+# ┌─────────────────────────────────────────────────────┐
+# │ Session: session-001  │  Tenant: ACME_CORP           │
+# ├─────────────────────────────────────────────────────┤
+# │ Turn 1                                              │
+# │   before_call hooks:  inject(12ms) | rate_limit(3ms)│
+# │   Tool: get_maintenance_order  →  312 tokens        │
+# │   on_tool_end hooks:  enrich(45ms) ✓                │
+# │   LLM synthesis:  →  865 input / 420 output tokens  │
+# │   after_call hooks:   audit(8ms) ✓                  │
+# │                                                     │
+# │ Total hook overhead:  68ms  (4.2% of turn latency)  │
+# │ Hooks that degraded:  0                             │
+# │ Hooks that blocked:   0                             │
+# └─────────────────────────────────────────────────────┘
+```
+
+---
+
+### Innovation Summary
+
+| Feature | Exists elsewhere? | Why it matters |
+|---|---|---|
+| Hook pipe composition (`\|`) | No | Single-purpose composable hooks |
+| Pattern decorators (`@approval_gate`) | No | Zero boilerplate for top 7 patterns |
+| Hook testing sandbox + replay | No | Test hooks without deploying |
+| AI-powered suggestions (static analysis) | No | Tells developers what hooks they need |
+| agentlens + agenthooks unified dashboard | No | Full agent observability in one view |
