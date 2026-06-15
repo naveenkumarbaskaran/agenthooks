@@ -9,9 +9,9 @@
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-818cf8?style=for-the-badge&labelColor=0a0520&logo=python&logoColor=818cf8)](https://www.python.org)
 [![License](https://img.shields.io/badge/license-Apache%202.0-c084fc?style=for-the-badge&labelColor=0a0520)](LICENSE)
 
-[![Tests](https://img.shields.io/badge/tests-91%20passed-22c55e?style=for-the-badge&labelColor=0a0520&logo=pytest&logoColor=22c55e)](#)
+[![Tests](https://img.shields.io/badge/tests-107%20passed-22c55e?style=for-the-badge&labelColor=0a0520&logo=pytest&logoColor=22c55e)](#)
 [![Docs](https://img.shields.io/badge/docs-agenthooks-818cf8?style=for-the-badge&labelColor=0a0520)](https://naveenkumarbaskaran.github.io/agenthooks/)
-[![Status](https://img.shields.io/badge/status-alpha-22d3ee?style=for-the-badge&labelColor=0a0520)](https://pypi.org/project/agenthooks)
+[![Status](https://img.shields.io/badge/status-alpha-22d3ee?style=for-the-badge&labelColor=0a0520)](https://github.com/naveenkumarbaskaran/agenthooks)
 [![Zero deps](https://img.shields.io/badge/core_deps-zero-22d3ee?style=for-the-badge&labelColor=0a0520)](pyproject.toml)
 
 [![LangGraph](https://img.shields.io/badge/LangGraph-compatible-22d3ee?style=flat-square&labelColor=0a0520)](https://github.com/langchain-ai/langgraph)
