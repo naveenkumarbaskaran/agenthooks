@@ -22,7 +22,21 @@ htmlcov/
 # Type checking
 .mypy_cache/
 
+# Linting / formatting
+.ruff_cache/
+
 # IDE
 .idea/
 .vscode/
 *.swp
+*.swo
+*~
+
+# agenthooks runtime
+*.jsonl
+~/.agenthooks/
+
+# Internal tooling — not for public repo
+docs/superpowers/
+.remember/
+.index/
