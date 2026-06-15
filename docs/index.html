@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>agenthooks — Hook any production agent. Ship extensibility.</title>
+  <meta name="description" content="Named hook points for production AI agents. Customers register their own logic. No fork. Nothing breaks if a hook fails. OTel-native."/>
+  <style>
+    :root {
+      --bg: #020818;
+      --bg2: #050d2a;
+      --bg3: #0a0520;
+      --cyan: #22d3ee;
+      --indigo: #818cf8;
+      --purple: #c084fc;
+      --green: #22c55e;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: rgba(129,140,248,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      line-height: 1.7;
+    }
+    a { color: var(--cyan); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 80px 24px 60px;
+      background: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(34,211,238,0.08) 0%, transparent 70%);
+    }
+    .hero img.banner { max-width: 960px; width: 100%; border-radius: 12px; margin-bottom: 40px; }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--cyan), var(--indigo), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+    .hero p.tagline {
+      font-size: 1.2rem;
+      color: var(--muted);
+      max-width: 640px;
+      margin: 0 auto 32px;
+    }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 36px; }
+    .install-block {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 28px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Fira Code', monospace;
+      font-size: 1.05rem;
+      color: var(--cyan);
+      margin-bottom: 40px;
+    }
+    .install-block span.prefix { color: var(--muted); }
+    .cta { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; text-decoration: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--cyan), var(--indigo)); color: #020818; }
+    .btn-outline { border: 1px solid var(--indigo); color: var(--indigo); }
+
+    /* ── Sections ── */
+    section { padding: 60px 24px; max-width: 1100px; margin: 0 auto; }
+    h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+    h3 { font-size: 1.15rem; font-weight: 600; color: var(--cyan); margin-bottom: 12px; }
+
+    /* ── Code ── */
+    pre {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      overflow-x: auto;
+      font-family: 'Fira Code', 'SF Mono', monospace;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--text);
+      margin: 0 0 24px;
+    }
+    code { font-family: 'Fira Code', monospace; color: var(--cyan); font-size: 0.9em; }
+
+    /* ── Feature grid ── */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 8px;
+    }
+    .feature-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: border-color 0.2s;
+    }
+    .feature-card:hover { border-color: var(--indigo); }
+    .feature-card .icon { font-size: 1.6rem; margin-bottom: 12px; }
+    .feature-card p { color: var(--muted); font-size: 0.93rem; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th { text-align: left; color: var(--indigo); font-weight: 600; padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    td { padding: 10px 14px; border-bottom: 1px solid rgba(129,140,248,0.07); font-size: 0.9rem; color: var(--muted); }
+    td:first-child { color: var(--cyan); font-family: monospace; }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 40px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    footer a { color: var(--indigo); }
+
+    /* ── Syntax colours ── */
+    .kw { color: #c084fc; }
+    .fn { color: #22d3ee; }
+    .str { color: #86efac; }
+    .cm { color: #475569; }
+    .dec { color: #f59e0b; }
+  </style>
+</head>
+<body>
+
+<!-- ── Hero ── -->
+<div class="hero">
+  <img class="banner" src="https://raw.githubusercontent.com/naveenkumarbaskaran/agenthooks/main/assets/banner.svg" alt="agenthooks banner"/>
+  <h1>agenthooks</h1>
+  <p class="tagline">Named hook points for production AI agents.<br/>Customers extend your agent — no fork, no source changes, nothing breaks.</p>
+
+  <div class="badges">
+    <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-818cf8?style=for-the-badge&labelColor=0a0520&logo=python&logoColor=818cf8" alt="Python"/>
+    <img src="https://img.shields.io/badge/license-Apache%202.0-c084fc?style=for-the-badge&labelColor=0a0520" alt="Apache 2.0"/>
+    <img src="https://img.shields.io/badge/core_deps-zero-22d3ee?style=for-the-badge&labelColor=0a0520" alt="Zero deps"/>
+    <img src="https://img.shields.io/badge/OTel-native-22d3ee?style=for-the-badge&labelColor=0a0520" alt="OTel"/>
+  </div>
+
+  <div class="install-block">
+    <span class="prefix">$</span> pip install agenthooks
+  </div>
+
+  <div class="cta">
+    <a class="btn btn-primary" href="https://github.com/naveenkumarbaskaran/agenthooks">GitHub</a>
+    <a class="btn btn-outline" href="https://github.com/naveenkumarbaskaran/agenthooks/tree/main/examples">Examples</a>
+    <a class="btn btn-outline" href="https://github.com/naveenkumarbaskaran/agenthooks/blob/main/docs/architecture.md">Architecture</a>
+  </div>
+</div>
+
+<!-- ── The problem ── -->
+<section>
+  <h2>The Problem</h2>
+  <p style="color:var(--muted); margin-bottom:24px;">You build a production AI agent. A customer deploys it. They need approval gates, compliance enrichment, rate limiting, custom audit logging. Today they fork your code. You lose control of the release cycle.</p>
+  <pre><span class="cm"># Without agenthooks — customer forks, patches, diverges forever</span>
+<span class="cm"># With agenthooks — customer registers logic, agent stays canonical</span>
+
+<span class="kw">class</span> <span class="fn">MyAgent</span>(HookAgent):
+    before_call = hookpoint(<span class="str">"before_call"</span>)     <span class="cm"># ← agent author declares this once</span>
+
+    <span class="kw">async def</span> <span class="fn">run</span>(self, query):
+        ctx = HookContext.new(session_id=<span class="str">"s1"</span>, tenant_id=<span class="str">"acme"</span>, query=query)
+        <span class="kw">async with</span> self.before_call.run(ctx) <span class="kw">as</span> ctx:
+            <span class="kw">return</span> await llm.call(ctx.query)   <span class="cm"># hooks have already enriched ctx</span>
+
+<span class="cm"># Customer code — entirely separate file, separate team, separate deploy</span>
+registry = HookRegistry()
+
+<span class="dec">@registry.implement("before_call")</span>
+<span class="kw">async def</span> <span class="fn">inject_context</span>(ctx):
+    <span class="kw">return</span> ctx.enrich(<span class="str">"region"</span>, <span class="str">"EU"</span>).enrich(<span class="str">"tier"</span>, <span class="str">"enterprise"</span>)
+
+agent = MyAgent(registries=[registry])</pre>
+</section>
+
+<!-- ── Features ── -->
+<section>
+  <h2>What You Get</h2>
+  <div class="features">
+    <div class="feature-card">
+      <div class="icon">🪝</div>
+      <h3>Named Hook Points</h3>
+      <p>Declare extension points anywhere in your agent pipeline. Sequential or parallel execution. Per-hook timeouts and fallback behaviour.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🔒</div>
+      <h3>Tenant Isolation</h3>
+      <p>Filter conditions are enforced by the executor. A hook registered for tenant A never fires for tenant B. Multiple customers coexist on one agent.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📡</div>
+      <h3>OTel-Native</h3>
+      <p>Every hook execution emits a span parented to your active trace, 5 metric instruments, and trace-correlated structured logs. Zero config required.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📋</div>
+      <h3>Append-Only Audit</h3>
+      <p>Every execution — ok, timeout, error, blocked — writes a JSONL entry. Cannot be disabled. Redacted fields surface as [REDACTED].</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🛡️</div>
+      <h3>Security Guards</h3>
+      <p>Sealed context fields prevent tenant impersonation. Prompt injection scanning on modified queries. Redaction API for credentials and PII.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">⚡</div>
+      <h3>Pattern Decorators</h3>
+      <p><code>@inject</code>, <code>@block_if</code>, <code>@redact</code>, <code>@rate_limit</code>, <code>@require_tenant</code>, <code>@retry</code> — compose freely, zero boilerplate.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── OTel ── -->
+<section>
+  <h2>OpenTelemetry — Automatic</h2>
+  <p style="color:var(--muted);margin-bottom:24px;">Configure the OTel SDK once. Hook spans appear as children under your application trace in Jaeger, Tempo, Datadog APM, Honeycomb — any OTLP backend.</p>
+  <pre><span class="kw">from</span> opentelemetry <span class="kw">import</span> trace
+<span class="kw">from</span> opentelemetry.sdk.trace <span class="kw">import</span> TracerProvider
+<span class="kw">from</span> opentelemetry.sdk.trace.export <span class="kw">import</span> BatchSpanProcessor
+<span class="kw">from</span> opentelemetry.exporter.otlp.proto.grpc.trace_exporter <span class="kw">import</span> OTLPSpanExporter
+
+provider = TracerProvider()
+provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+trace.set_tracer_provider(provider)
+
+<span class="cm"># agenthooks picks this up automatically.
+# Every hook execution becomes a child span with hook.name, hook.impl,
+# hook.tenant_id, hook.status, hook.duration_ms attributes.</span></pre>
+
+  <table>
+    <tr><th>Metric</th><th>Type</th><th>Dimensions</th></tr>
+    <tr><td>agenthooks.hook.executions</td><td>Counter</td><td>hook.name · hook.impl · hook.status</td></tr>
+    <tr><td>agenthooks.hook.duration_ms</td><td>Histogram</td><td>hook.name · hook.impl</td></tr>
+    <tr><td>agenthooks.hook.errors</td><td>Counter</td><td>hook.name · hook.impl</td></tr>
+    <tr><td>agenthooks.hook.timeouts</td><td>Counter</td><td>hook.name</td></tr>
+    <tr><td>agenthooks.hook.blocked</td><td>Counter</td><td>hook.name · hook.impl</td></tr>
+  </table>
+</section>
+
+<!-- ── Docs links ── -->
+<section>
+  <h2>Documentation</h2>
+  <div class="features">
+    <div class="feature-card">
+      <h3><a href="https://github.com/naveenkumarbaskaran/agenthooks/blob/main/docs/architecture.md">Architecture →</a></h3>
+      <p>Three-layer design, data model, execution flow, registry filter evaluation, and observability wiring.</p>
+    </div>
+    <div class="feature-card">
+      <h3><a href="https://github.com/naveenkumarbaskaran/agenthooks/blob/main/docs/security.md">Security →</a></h3>
+      <p>Threat model, sealed fields, injection scanning, tenant isolation, redaction, audit invariant.</p>
+    </div>
+    <div class="feature-card">
+      <h3><a href="https://github.com/naveenkumarbaskaran/agenthooks/blob/main/docs/flow.md">Execution Flow →</a></h3>
+      <p>Step-by-step trace of a hook execution: span creation, metric recording, audit write, all failure paths.</p>
+    </div>
+    <div class="feature-card">
+      <h3><a href="https://github.com/naveenkumarbaskaran/agenthooks/tree/main/examples">Examples →</a></h3>
+      <p>5 runnable examples: basic hooks, customer extensibility, multi-tenant isolation, resilience, OTel wiring.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer>
+  <p>Apache 2.0 · Built by <a href="https://github.com/naveenkumarbaskaran">Naveen Kumar Baskaran</a></p>
+  <p style="margin-top:8px;"><a href="https://github.com/naveenkumarbaskaran/agenthooks">GitHub</a> · <a href="https://github.com/naveenkumarbaskaran/wire-ai">wire-ai</a></p>
+</footer>
+
+</body>
+</html>

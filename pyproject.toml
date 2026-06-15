@@ -1,18 +1,19 @@
 [project]
 name = "agenthooks"
 version = "0.1.0"
-description = "BAdI-style hook system for AI agents — define extension points, let customers implement them"
+description = "Hook any production agent. Ship extensibility without a fork."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 authors = [{ name = "Naveen Kumar Baskaran" }]
-keywords = ["agents", "hooks", "middleware", "extensibility", "badi", "llm"]
+keywords = ["agents", "hooks", "middleware", "extensibility", "opentelemetry", "llm", "enterprise"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = []
