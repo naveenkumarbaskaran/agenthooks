@@ -6,6 +6,8 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any, AsyncIterator
 from agenthooks.core.context import HookContext
 from agenthooks.core.exceptions import HookBlocked, HookSkip, HookTimeout
+from agenthooks.observability import hook_span, record_metric
+from agenthooks.audit import get_default_audit
 
 if TYPE_CHECKING:
     from agenthooks.core.registry import HookRegistry, ImplRegistration
@@ -45,24 +47,84 @@ class HookPointDescriptor:
 async def _run_one(hookpoint_name: str, reg: "ImplRegistration", ctx: HookContext) -> tuple[HookContext, str]:
     impl_name = reg.fn.__name__
     t0 = time.monotonic()
-    try:
-        result = await asyncio.wait_for(reg.fn(ctx), timeout=reg.timeout_ms / 1000)
-        logger.debug("hook ok: hookpoint=%s impl=%s elapsed=%.1fms", hookpoint_name, impl_name, (time.monotonic() - t0) * 1000)
-        return result, "ok"
-    except asyncio.TimeoutError:
-        logger.warning("hook timeout: hookpoint=%s impl=%s timeout_ms=%d — degraded", hookpoint_name, impl_name, reg.timeout_ms)
-        if not reg.fallback:
-            raise HookTimeout(hookpoint_name, impl_name, reg.timeout_ms)
-        return ctx, "timeout"
-    except HookBlocked:
-        raise
-    except HookSkip:
-        raise
-    except Exception as exc:
-        logger.error("hook error: hookpoint=%s impl=%s error=%s — degraded", hookpoint_name, impl_name, exc)
-        if not reg.fallback:
+    status = "ok"
+
+    with hook_span(hookpoint_name, impl_name, ctx) as span:
+        try:
+            result = await asyncio.wait_for(reg.fn(ctx), timeout=reg.timeout_ms / 1000)
+            duration_ms = (time.monotonic() - t0) * 1000
+            logger.debug(
+                "hook ok: hookpoint=%s impl=%s elapsed=%.1fms",
+                hookpoint_name, impl_name, duration_ms,
+            )
+            record_metric(hookpoint_name, impl_name, "ok", duration_ms)
+            span.set_attribute("hook.status", "ok")
+            span.set_attribute("hook.duration_ms", round(duration_ms, 2))
+            asyncio.ensure_future(
+                get_default_audit().record(
+                    hookpoint=hookpoint_name, impl_name=impl_name, ctx=ctx,
+                    status="ok", duration_ms=duration_ms,
+                )
+            )
+            return result, "ok"
+
+        except asyncio.TimeoutError:
+            duration_ms = (time.monotonic() - t0) * 1000
+            logger.warning(
+                "hook timeout: hookpoint=%s impl=%s timeout_ms=%d — degraded",
+                hookpoint_name, impl_name, reg.timeout_ms,
+            )
+            record_metric(hookpoint_name, impl_name, "timeout", duration_ms)
+            span.set_attribute("hook.status", "timeout")
+            span.set_attribute("hook.duration_ms", round(duration_ms, 2))
+            asyncio.ensure_future(
+                get_default_audit().record(
+                    hookpoint=hookpoint_name, impl_name=impl_name, ctx=ctx,
+                    status="timeout", duration_ms=duration_ms,
+                    error=f"timed out after {reg.timeout_ms}ms",
+                )
+            )
+            if not reg.fallback:
+                raise HookTimeout(hookpoint_name, impl_name, reg.timeout_ms)
+            return ctx, "timeout"
+
+        except HookBlocked as exc:
+            duration_ms = (time.monotonic() - t0) * 1000
+            record_metric(hookpoint_name, impl_name, "blocked", duration_ms)
+            span.set_attribute("hook.status", "blocked")
+            span.set_attribute("hook.error", exc.reason)
+            asyncio.ensure_future(
+                get_default_audit().record(
+                    hookpoint=hookpoint_name, impl_name=impl_name, ctx=ctx,
+                    status="blocked", duration_ms=duration_ms, error=exc.reason,
+                )
+            )
             raise
-        return ctx, "error"
+
+        except HookSkip:
+            duration_ms = (time.monotonic() - t0) * 1000
+            record_metric(hookpoint_name, impl_name, "skip", duration_ms)
+            span.set_attribute("hook.status", "skip")
+            raise
+
+        except Exception as exc:
+            duration_ms = (time.monotonic() - t0) * 1000
+            logger.error(
+                "hook error: hookpoint=%s impl=%s error=%s — degraded",
+                hookpoint_name, impl_name, exc,
+            )
+            record_metric(hookpoint_name, impl_name, "error", duration_ms)
+            span.set_attribute("hook.status", "error")
+            span.record_exception(exc)
+            asyncio.ensure_future(
+                get_default_audit().record(
+                    hookpoint=hookpoint_name, impl_name=impl_name, ctx=ctx,
+                    status="error", duration_ms=duration_ms, error=str(exc),
+                )
+            )
+            if not reg.fallback:
+                raise
+            return ctx, "error"
 
 
 async def _run_sequential(hookpoint_name: str, impls: list["ImplRegistration"], ctx: HookContext) -> HookContext:
