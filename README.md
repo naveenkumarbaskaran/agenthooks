@@ -148,7 +148,7 @@ async def external_enrichment(ctx): ...
 Every hook execution is automatically traced and metered. No instrumentation code required.
 
 ```python
-# Wire up the OTel SDK once at startup (pip install agenthooks[otel])
+# Wire up the OTel SDK once at startup (pip install agenthooks-py[otel])
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
