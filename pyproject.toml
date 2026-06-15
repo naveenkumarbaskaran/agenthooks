@@ -1,5 +1,5 @@
 [project]
-name = "agenthooks"
+name = "agenthooks-py"
 version = "0.1.0"
 description = "Hook any production agent. Ship extensibility without a fork."
 readme = "README.md"
