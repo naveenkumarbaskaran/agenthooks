@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-INJECTION_PATTERNS: list[re.Pattern] = [
+INJECTION_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"ignore\s+(?:all\s+)?(?:previous|above|prior)\s+instructions?", re.IGNORECASE),
     re.compile(r"<script|javascript:", re.IGNORECASE),
     re.compile(r"\[\[(?:system|user|assistant)\]\]", re.IGNORECASE),

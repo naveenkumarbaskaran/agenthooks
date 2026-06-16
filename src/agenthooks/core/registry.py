@@ -16,7 +16,7 @@ class ImplRegistration:
     fn: HookFn
     hookpoint: str
     mode: str = "multi"
-    filter: dict = dataclasses.field(default_factory=dict)
+    filter: dict[str, Any] = dataclasses.field(default_factory=dict)
     order: int = 100
     timeout_ms: int = 500
     fallback: bool = True
@@ -38,7 +38,7 @@ class HookRegistry:
         hookpoint: str,
         *,
         mode: str = "multi",
-        filter: dict | None = None,  # noqa: A002
+        filter: dict[str, Any] | None = None,  # noqa: A002
         order: int = 100,
         timeout_ms: int | None = None,
         fallback: bool = True,
@@ -74,7 +74,7 @@ class HookRegistry:
         matched = [r for r in all_impls if self._matches_filter(r.filter, ctx)]
         return sorted(matched, key=lambda r: r.order)
 
-    def _matches_filter(self, f: dict, ctx: HookContext) -> bool:
+    def _matches_filter(self, f: dict[str, Any], ctx: HookContext) -> bool:
         for key, expected in f.items():
             if key == "tenant":
                 actual = ctx.tenant_id

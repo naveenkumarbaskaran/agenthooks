@@ -151,7 +151,7 @@ async def _run_parallel(hookpoint_name: str, impls: list[ImplRegistration], ctx:
     try:
         return ctx.model_copy(update={"metadata": merged_metadata})
     except AttributeError:
-        return ctx._copy(metadata=merged_metadata)
+        return ctx._copy(metadata=merged_metadata)  # type: ignore[attr-defined]
 
 
 def hookpoint(name: str, *, mode: str = "multi", parallel: bool = False, schema: type | None = None, contract_version: str | None = None, registries: list[HookRegistry] | None = None) -> HookPointDescriptor:

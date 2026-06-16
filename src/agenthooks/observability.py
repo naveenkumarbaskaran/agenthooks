@@ -286,12 +286,12 @@ class _Instruments:
     """Lazily initialised metric instruments. One instance per process."""
 
     def __init__(self) -> None:
-        self._meter = None
-        self._executions = None
-        self._duration = None
-        self._errors = None
-        self._timeouts = None
-        self._blocked = None
+        self._meter: Any = None
+        self._executions: Any = None
+        self._duration: Any = None
+        self._errors: Any = None
+        self._timeouts: Any = None
+        self._blocked: Any = None
 
     def _init(self) -> None:
         if self._meter is not None:

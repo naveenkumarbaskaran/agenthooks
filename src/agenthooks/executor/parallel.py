@@ -21,4 +21,4 @@ class ParallelExecutor:
         try:
             return ctx.model_copy(update={"metadata": merged_metadata})
         except AttributeError:
-            return ctx._copy(metadata=merged_metadata)
+            return ctx._copy(metadata=merged_metadata)  # type: ignore[attr-defined]

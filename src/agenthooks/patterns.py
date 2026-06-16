@@ -125,7 +125,7 @@ def rate_limit(
     def decorator(fn: Callable) -> Callable:
         @functools.wraps(fn)
         async def wrapper(ctx: HookContext) -> HookContext:
-            key = ctx.tenant_id if per == "tenant" else ctx.session_id
+            key: str = (ctx.tenant_id or ctx.session_id) if per == "tenant" else ctx.session_id
             now = time.monotonic()
             # Evict timestamps outside the rolling window
             _windows[key] = [t for t in _windows[key] if now - t < window_s]

@@ -69,11 +69,11 @@ except ImportError:
         timestamp: float = dataclasses.field(default_factory=time.time)
         query: str | None = None
         tool_name: str | None = None
-        tool_inputs: dict = dataclasses.field(default_factory=dict)
-        tool_result: dict | None = None
+        tool_inputs: dict[str, Any] = dataclasses.field(default_factory=dict)
+        tool_result: dict[str, Any] | None = None
         llm_response: str | None = None
         error: BaseException | None = None
-        metadata: dict = dataclasses.field(default_factory=dict)
+        metadata: dict[str, Any] = dataclasses.field(default_factory=dict)
 
         @classmethod
         def new(cls, session_id: str, tenant_id: str | None = None, **kwargs) -> HookContext:
@@ -104,5 +104,5 @@ except ImportError:
         def skip(self) -> None:
             raise HookSkip()
 
-        def model_dump(self) -> dict:
+        def model_dump(self) -> dict[str, Any]:
             return dataclasses.asdict(self)
