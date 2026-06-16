@@ -1,8 +1,8 @@
 import pytest
-from agenthooks.patterns import inject, block_if, redact, rate_limit, require_tenant, retry
+
 from agenthooks.core.context import HookContext
-from agenthooks.core.registry import HookRegistry
 from agenthooks.core.exceptions import HookBlocked
+from agenthooks.patterns import block_if, inject, rate_limit, redact, require_tenant, retry
 
 
 def make_ctx(tenant_id="acme") -> HookContext:
@@ -179,7 +179,7 @@ async def test_retry_succeeds_on_second_attempt():
 async def test_retry_exhausted_raises():
     @retry(max_attempts=2, backoff_ms=1)
     async def always_fails(ctx: HookContext) -> HookContext:
-        raise IOError("always down")
+        raise OSError("always down")
 
     with pytest.raises(IOError, match="always down"):
         await always_fails(make_ctx())

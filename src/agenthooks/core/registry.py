@@ -1,7 +1,10 @@
 from __future__ import annotations
+
 import dataclasses
 from collections import defaultdict
-from typing import Any, Callable, Coroutine
+from collections.abc import Callable, Coroutine
+from typing import Any
+
 from agenthooks.core.context import HookContext
 from agenthooks.core.contract import check_compatibility
 from agenthooks.core.exceptions import HookConflict, HookContractError

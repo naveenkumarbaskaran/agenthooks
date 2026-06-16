@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 from collections import defaultdict
+
 from agenthooks.core.registry import HookRegistry
+
 
 class InMemoryStore:
     def __init__(self) -> None:

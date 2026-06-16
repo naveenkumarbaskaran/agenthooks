@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main, beta, stable]
+  pull_request:
+    branches: [master, main, beta, stable]
+
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -e ".[dev,pydantic,otel]"
+
+      - name: Lint (ruff)
+        run: ruff check src/ tests/
+
+      - name: Type check (mypy)
+        run: mypy src/agenthooks
+
+      - name: Run tests with coverage
+        run: python -m pytest tests/ -q --tb=short --cov=agenthooks --cov-report=term-missing
+
+      - name: Check exports resolve
+        run: |
+          python -c "
+          import sys; sys.path.insert(0, 'src')
+          import agenthooks
+          missing = [x for x in agenthooks.__all__ if getattr(agenthooks, x, None) is None]
+          if missing:
+              print('MISSING:', missing); sys.exit(1)
+          print(f'All {len(agenthooks.__all__)} exports OK — version', agenthooks.__version__)
+          "
+
+      - name: Version consistency check
+        run: |
+          PYPROJECT_VER=$(grep '^version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          INIT_VER=$(python -c "import sys; sys.path.insert(0,'src'); import agenthooks; print(agenthooks.__version__)")
+          if [ "$PYPROJECT_VER" != "$INIT_VER" ]; then
+            echo "Version mismatch: pyproject=$PYPROJECT_VER vs __init__=$INIT_VER"
+            exit 1
+          fi
+          echo "Version consistent: $PYPROJECT_VER"

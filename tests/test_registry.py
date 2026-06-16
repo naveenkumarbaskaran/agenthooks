@@ -1,9 +1,11 @@
 import time
+
 import pytest
-import asyncio
-from agenthooks.core.registry import HookRegistry, ImplRegistration
+
 from agenthooks.core.context import HookContext
 from agenthooks.core.exceptions import HookConflict, HookContractError
+from agenthooks.core.registry import HookRegistry
+
 
 def make_ctx(**kwargs) -> HookContext:
     defaults = dict(session_id="s1", tenant_id="acme", trace_id="t1", span_id="sp1", turn=0, timestamp=time.time())

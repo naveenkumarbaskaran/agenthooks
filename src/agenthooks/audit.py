@@ -107,11 +107,16 @@ class AuditTrail:
         line = json.dumps(entry, default=str)
         try:
             async with self._lock:
-                with open(self._path, "a", encoding="utf-8") as f:
-                    f.write(line + "\n")
+                await asyncio.get_event_loop().run_in_executor(
+                    None, self._write_line, line
+                )
         except OSError as exc:
             import sys
             print(f"[agenthooks.audit] WARNING: could not write audit entry: {exc}", file=sys.stderr)
+
+    def _write_line(self, line: str) -> None:
+        with open(self._path, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
 
 
 # Module-level default instance — wired into the executor automatically.

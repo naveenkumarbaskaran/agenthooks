@@ -1,11 +1,14 @@
-import time
-import pytest
 import asyncio
-from agenthooks.executor.sequential import SequentialExecutor
-from agenthooks.executor.parallel import ParallelExecutor
-from agenthooks.core.registry import HookRegistry
+import time
+
+import pytest
+
 from agenthooks.core.context import HookContext
 from agenthooks.core.exceptions import HookBlocked
+from agenthooks.core.registry import HookRegistry
+from agenthooks.executor.parallel import ParallelExecutor
+from agenthooks.executor.sequential import SequentialExecutor
+
 
 def make_ctx(**kwargs) -> HookContext:
     defaults = dict(session_id="s1", tenant_id="acme", trace_id="t1", span_id="sp1", turn=0, timestamp=time.time())

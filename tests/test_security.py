@@ -1,9 +1,9 @@
 import json
-import pytest
-from agenthooks.security.guards import injection_scan, INJECTION_PATTERNS
-from agenthooks.core.context import HookContext
-from agenthooks.core.exceptions import HookBlocked
 
+import pytest
+
+from agenthooks.core.context import HookContext
+from agenthooks.security.guards import injection_scan
 
 # ── injection_scan ──────────────────────────────────────────────────────────
 
@@ -150,7 +150,7 @@ async def test_audit_appends_multiple_entries(tmp_path):
 
 @pytest.mark.asyncio
 async def test_audit_set_default(tmp_path):
-    from agenthooks.audit import AuditTrail, set_default_audit, get_default_audit
+    from agenthooks.audit import AuditTrail, get_default_audit, set_default_audit
     custom = AuditTrail(path=str(tmp_path / "custom.jsonl"))
     set_default_audit(custom)
     assert get_default_audit() is custom

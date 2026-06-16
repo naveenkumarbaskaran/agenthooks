@@ -1,5 +1,7 @@
 import pytest
+
 from agenthooks.core.contract import ContractVersion, check_compatibility
+
 
 def test_parse_valid_version():
     v = ContractVersion("1.0")

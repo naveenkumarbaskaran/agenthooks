@@ -1,13 +1,16 @@
 from __future__ import annotations
+
 import asyncio
 import logging
 import time
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, AsyncIterator
+from typing import TYPE_CHECKING
+
+from agenthooks.audit import get_default_audit
 from agenthooks.core.context import HookContext
 from agenthooks.core.exceptions import HookBlocked, HookSkip, HookTimeout
 from agenthooks.observability import hook_span, record_metric
-from agenthooks.audit import get_default_audit
 
 if TYPE_CHECKING:
     from agenthooks.core.registry import HookRegistry, ImplRegistration
@@ -16,16 +19,16 @@ logger = logging.getLogger("agenthooks.hookpoint")
 
 
 class HookPointDescriptor:
-    def __init__(self, name: str, mode: str = "multi", parallel: bool = False, registries: list["HookRegistry"] | None = None) -> None:
+    def __init__(self, name: str, mode: str = "multi", parallel: bool = False, registries: list[HookRegistry] | None = None) -> None:
         self.name = name
         self.mode = mode
         self.parallel = parallel
-        self._registries: list["HookRegistry"] = registries or []
+        self._registries: list[HookRegistry] = registries or []
 
-    def add_registry(self, registry: "HookRegistry") -> None:
+    def add_registry(self, registry: HookRegistry) -> None:
         self._registries.append(registry)
 
-    def _get_impls(self, ctx: HookContext) -> list["ImplRegistration"]:
+    def _get_impls(self, ctx: HookContext) -> list[ImplRegistration]:
         impls = []
         for reg in self._registries:
             impls.extend(reg.get_impls(self.name, ctx))
@@ -44,10 +47,9 @@ class HookPointDescriptor:
         yield ctx
 
 
-async def _run_one(hookpoint_name: str, reg: "ImplRegistration", ctx: HookContext) -> tuple[HookContext, str]:
+async def _run_one(hookpoint_name: str, reg: ImplRegistration, ctx: HookContext) -> tuple[HookContext, str]:
     impl_name = reg.fn.__name__
     t0 = time.monotonic()
-    status = "ok"
 
     with hook_span(hookpoint_name, impl_name, ctx) as span:
         try:
@@ -68,7 +70,7 @@ async def _run_one(hookpoint_name: str, reg: "ImplRegistration", ctx: HookContex
             )
             return result, "ok"
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             duration_ms = (time.monotonic() - t0) * 1000
             logger.warning(
                 "hook timeout: hookpoint=%s impl=%s timeout_ms=%d — degraded",
@@ -127,7 +129,7 @@ async def _run_one(hookpoint_name: str, reg: "ImplRegistration", ctx: HookContex
             return ctx, "error"
 
 
-async def _run_sequential(hookpoint_name: str, impls: list["ImplRegistration"], ctx: HookContext) -> HookContext:
+async def _run_sequential(hookpoint_name: str, impls: list[ImplRegistration], ctx: HookContext) -> HookContext:
     for reg in impls:
         try:
             ctx, _ = await _run_one(hookpoint_name, reg, ctx)
@@ -136,7 +138,7 @@ async def _run_sequential(hookpoint_name: str, impls: list["ImplRegistration"], 
     return ctx
 
 
-async def _run_parallel(hookpoint_name: str, impls: list["ImplRegistration"], ctx: HookContext) -> HookContext:
+async def _run_parallel(hookpoint_name: str, impls: list[ImplRegistration], ctx: HookContext) -> HookContext:
     tasks = [_run_one(hookpoint_name, reg, ctx) for reg in impls]
     results = await asyncio.gather(*tasks, return_exceptions=True)
     merged_metadata = dict(ctx.metadata)
@@ -152,5 +154,5 @@ async def _run_parallel(hookpoint_name: str, impls: list["ImplRegistration"], ct
         return ctx._copy(metadata=merged_metadata)
 
 
-def hookpoint(name: str, *, mode: str = "multi", parallel: bool = False, schema: type | None = None, contract_version: str | None = None, registries: list["HookRegistry"] | None = None) -> "HookPointDescriptor":
+def hookpoint(name: str, *, mode: str = "multi", parallel: bool = False, schema: type | None = None, contract_version: str | None = None, registries: list[HookRegistry] | None = None) -> HookPointDescriptor:
     return HookPointDescriptor(name=name, mode=mode, parallel=parallel, registries=registries or [])

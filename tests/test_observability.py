@@ -5,12 +5,17 @@ zero-dep fallback path. They also verify that metric instruments accumulate
 correctly via the in-process meter.
 """
 import pytest
+
 from agenthooks.core.context import HookContext
-from agenthooks.core.registry import HookRegistry
 from agenthooks.core.hookpoint import hookpoint
+from agenthooks.core.registry import HookRegistry
 from agenthooks.observability import (
-    get_tracer, get_meter, get_instruments, record_metric,
-    hook_span, _OTEL_TRACING, _OTEL_METRICS, _InProcessMeter,
+    _OTEL_TRACING,
+    _InProcessMeter,
+    get_instruments,
+    get_tracer,
+    hook_span,
+    record_metric,
 )
 
 
@@ -148,5 +153,6 @@ async def test_executor_records_metrics_on_timeout():
 
 def test_configure_logging_does_not_raise():
     import logging
+
     from agenthooks.observability import configure_logging
     configure_logging(level=logging.WARNING)

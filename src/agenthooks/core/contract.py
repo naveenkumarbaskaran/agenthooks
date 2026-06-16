@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import re
 from dataclasses import dataclass
+
 
 @dataclass(frozen=True)
 class ContractVersion:
@@ -14,13 +16,13 @@ class ContractVersion:
         object.__setattr__(self, "major", int(m.group(1)))
         object.__setattr__(self, "minor", int(m.group(2)))
 
-    def __le__(self, other: "ContractVersion") -> bool:
+    def __le__(self, other: ContractVersion) -> bool:
         return (self.major, self.minor) <= (other.major, other.minor)
-    def __lt__(self, other: "ContractVersion") -> bool:
+    def __lt__(self, other: ContractVersion) -> bool:
         return (self.major, self.minor) < (other.major, other.minor)
-    def __ge__(self, other: "ContractVersion") -> bool:
+    def __ge__(self, other: ContractVersion) -> bool:
         return (self.major, self.minor) >= (other.major, other.minor)
-    def __gt__(self, other: "ContractVersion") -> bool:
+    def __gt__(self, other: ContractVersion) -> bool:
         return (self.major, self.minor) > (other.major, other.minor)
     def __str__(self) -> str:
         return f"{self.major}.{self.minor}"

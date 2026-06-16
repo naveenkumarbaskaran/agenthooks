@@ -1,6 +1,7 @@
-import pytest
-from agenthooks.store.memory import InMemoryStore
+
 from agenthooks.core.registry import HookRegistry
+from agenthooks.store.memory import InMemoryStore
+
 
 def test_saves_and_retrieves():
     store = InMemoryStore()

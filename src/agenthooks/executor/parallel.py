@@ -1,8 +1,11 @@
 from __future__ import annotations
+
 import asyncio
+
 from agenthooks.core.context import HookContext
 from agenthooks.core.hookpoint import _run_one
 from agenthooks.core.registry import ImplRegistration
+
 
 class ParallelExecutor:
     async def run(self, hookpoint_name: str, impls: list[ImplRegistration], ctx: HookContext) -> HookContext:

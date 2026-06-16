@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from agenthooks.core.hookpoint import HookPointDescriptor
 from agenthooks.core.registry import HookRegistry
+
 
 class HookAgent:
     def __init__(self, registries: list[HookRegistry] | None = None) -> None:

@@ -21,7 +21,8 @@ import functools
 import logging
 import time
 from collections import defaultdict
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from agenthooks.core.context import HookContext
 from agenthooks.core.exceptions import HookBlocked
@@ -179,6 +180,7 @@ def retry(*, max_attempts: int = 3, backoff_ms: int = 100) -> Callable:
         async def my_hook(ctx): return await external_service.enrich(ctx)
     """
     import asyncio
+
     from agenthooks.core.exceptions import HookBlocked, HookSkip
 
     def decorator(fn: Callable) -> Callable:

@@ -63,9 +63,9 @@ Explicit SDK setup (application code):
 from __future__ import annotations
 
 import logging
-import time
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Generator
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from agenthooks.core.context import HookContext
@@ -162,7 +162,7 @@ class _NoopTracer:
 def hook_span(
     hookpoint_name: str,
     impl_name: str,
-    ctx: "HookContext",
+    ctx: HookContext,
     mode: str = "sequential",
 ) -> Generator[Any, None, None]:
     """Context manager that wraps one hook impl execution in an OTel span.

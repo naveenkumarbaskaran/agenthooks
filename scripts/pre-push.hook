@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Pre-push regression hook for agenthooks.
+# Runs the full regression suite before every push.
+# Installed by scripts/install-hooks.sh
+set -uo pipefail
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+bash "$REPO/scripts/regression.sh"

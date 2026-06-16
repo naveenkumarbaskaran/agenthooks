@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 import time
 import uuid
 from typing import Any
+
 from agenthooks.core.exceptions import HookBlocked, HookSecurityError, HookSkip
 
 _SEALED_FIELDS = frozenset({"session_id", "tenant_id", "trace_id", "span_id", "turn", "timestamp"})
@@ -26,7 +28,7 @@ try:
         metadata: dict[str, Any] = Field(default_factory=dict)
 
         @classmethod
-        def new(cls, session_id: str, tenant_id: str | None = None, **kwargs: Any) -> "HookContext":
+        def new(cls, session_id: str, tenant_id: str | None = None, **kwargs: Any) -> HookContext:
             return cls(
                 session_id=session_id,
                 tenant_id=tenant_id,
@@ -36,15 +38,15 @@ try:
                 **kwargs,
             )
 
-        def enrich(self, key: str, value: Any) -> "HookContext":
+        def enrich(self, key: str, value: Any) -> HookContext:
             return self.model_copy(update={"metadata": {**self.metadata, key: value}})
 
-        def replace(self, field: str, value: Any) -> "HookContext":
+        def replace(self, field: str, value: Any) -> HookContext:
             if field in _SEALED_FIELDS:
                 raise HookSecurityError(field)
             return self.model_copy(update={field: value})
 
-        def redact(self, *fields: str) -> "HookContext":
+        def redact(self, *fields: str) -> HookContext:
             existing = list(self.metadata.get("__redacted__", []))
             return self.model_copy(update={"metadata": {**self.metadata, "__redacted__": existing + list(fields)}})
 
@@ -74,25 +76,25 @@ except ImportError:
         metadata: dict = dataclasses.field(default_factory=dict)
 
         @classmethod
-        def new(cls, session_id: str, tenant_id: str | None = None, **kwargs) -> "HookContext":
+        def new(cls, session_id: str, tenant_id: str | None = None, **kwargs) -> HookContext:
             return cls(session_id=session_id, tenant_id=tenant_id, **kwargs)
 
-        def _copy(self, **updates) -> "HookContext":
+        def _copy(self, **updates) -> HookContext:
             import copy
             obj = copy.copy(self)
             for k, v in updates.items():
                 object.__setattr__(obj, k, v)
             return obj
 
-        def enrich(self, key: str, value) -> "HookContext":
+        def enrich(self, key: str, value) -> HookContext:
             return self._copy(metadata={**self.metadata, key: value})
 
-        def replace(self, field: str, value) -> "HookContext":
+        def replace(self, field: str, value) -> HookContext:
             if field in _SEALED_FIELDS:
                 raise HookSecurityError(field)
             return self._copy(**{field: value})
 
-        def redact(self, *fields: str) -> "HookContext":
+        def redact(self, *fields: str) -> HookContext:
             existing = list(self.metadata.get("__redacted__", []))
             return self._copy(metadata={**self.metadata, "__redacted__": existing + list(fields)})
 

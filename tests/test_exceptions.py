@@ -1,9 +1,15 @@
 import pytest
+
 from agenthooks.core.exceptions import (
-    HookBlocked, HookSkip, HookConflict,
-    HookContractError, HookTimeout,
-    HookSecurityError, HookRecursionError,
+    HookBlocked,
+    HookConflict,
+    HookContractError,
+    HookRecursionError,
+    HookSecurityError,
+    HookSkip,
+    HookTimeout,
 )
+
 
 def test_hook_blocked_carries_reason():
     exc = HookBlocked("Needs approval")

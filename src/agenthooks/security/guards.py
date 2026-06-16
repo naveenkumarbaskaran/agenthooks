@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import re
 
 INJECTION_PATTERNS: list[re.Pattern] = [

@@ -1,7 +1,9 @@
 import time
+
 import pytest
-import asyncio
-from agenthooks import HookAgent, hookpoint, HookRegistry, HookContext, HookBlocked, HookWrapper
+
+from agenthooks import HookAgent, HookBlocked, HookContext, HookRegistry, HookWrapper, hookpoint
+
 
 def make_ctx(**kwargs) -> HookContext:
     defaults = dict(session_id="s1", tenant_id="acme", trace_id="t1", span_id="sp1", turn=0, timestamp=time.time())

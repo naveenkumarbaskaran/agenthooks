@@ -1,10 +1,13 @@
-import time
-import pytest
 import asyncio
-from agenthooks.core.hookpoint import hookpoint, HookPointDescriptor
-from agenthooks.core.registry import HookRegistry
+import time
+
+import pytest
+
 from agenthooks.core.context import HookContext
-from agenthooks.core.exceptions import HookBlocked, HookSkip
+from agenthooks.core.exceptions import HookBlocked
+from agenthooks.core.hookpoint import hookpoint
+from agenthooks.core.registry import HookRegistry
+
 
 def make_ctx(**kwargs) -> HookContext:
     defaults = dict(session_id="s1", tenant_id="acme", trace_id="t1", span_id="sp1", turn=0, timestamp=time.time())
@@ -42,7 +45,7 @@ async def test_blocked_propagates():
     hp = hookpoint("before_call", registries=[registry])
     ctx = make_ctx()
     with pytest.raises(HookBlocked, match="Not allowed"):
-        async with hp.run(ctx) as result:
+        async with hp.run(ctx):
             pass
 
 @pytest.mark.asyncio
