@@ -131,10 +131,10 @@ try:
 
 except ImportError:
     _OTEL_TRACING = False
-    SpanKind = None  # type: ignore[misc]
-    StatusCode = None  # type: ignore[misc]
+    SpanKind = None  # type: ignore
+    StatusCode = None  # type: ignore
 
-    def get_tracer():  # type: ignore[misc]
+    def get_tracer():  # type: ignore
         return _NoopTracer()
 
 
@@ -201,7 +201,7 @@ try:
 except ImportError:
     _OTEL_METRICS = False
 
-    def get_meter():  # type: ignore[misc]
+    def get_meter():  # type: ignore
         return _InProcessMeter()
 
 
