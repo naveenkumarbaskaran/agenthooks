@@ -25,7 +25,7 @@ from agenthooks.patterns import block_if, inject, rate_limit, redact, require_te
 from agenthooks.security.guards import injection_scan
 from agenthooks.store.memory import InMemoryStore
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = [
     # Core
     "HookContext", "HookAgent", "HookWrapper", "HookRegistry", "ImplRegistration",
