@@ -131,8 +131,8 @@ try:
 
 except ImportError:
     _OTEL_TRACING = False
-    SpanKind = None  # type: ignore[assignment]
-    StatusCode = None  # type: ignore[assignment]
+    SpanKind = None  # type: ignore[misc]
+    StatusCode = None  # type: ignore[misc]
 
     def get_tracer():  # type: ignore[misc]
         return _NoopTracer()
